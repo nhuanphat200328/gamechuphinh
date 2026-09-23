@@ -130,7 +130,7 @@ export default function ScreenPage() {
 
         {/* Main stage */}
         <section className="mt-[clamp(0.5rem,1.5vh,1.5rem)] flex min-h-0 flex-1 items-center gap-[clamp(1rem,3vw,3rem)]">
-          <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center">
+          <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center self-stretch">
             <div className="h-full w-full" onAnimationEnd={handleAnimationEnd}>
               {loading && !game ? (
                 <div className="flex h-full w-full items-center justify-center text-[var(--muted)]">
