@@ -1,0 +1,296 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #05070d;
+  --bg-2: #0a0f1c;
+  --ink: #f4f7ff;
+  --muted: #8ea0c0;
+  --gold: #f5c451;
+  --gold-2: #ffe6a3;
+  --line: rgba(245, 196, 81, 0.25);
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================================
+   Eagle puzzle
+   ========================================================================== */
+.eagle-puzzle {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: 55% 45%;
+  will-change: transform, opacity, filter;
+}
+
+.eagle-puzzle__svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.puzzle-piece__photo {
+  opacity: 0;
+  transform-origin: center;
+  animation: piece-in 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.puzzle-piece.is-highlighted .puzzle-piece__photo {
+  animation:
+    piece-in 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+    piece-glow 1.6s ease-out forwards;
+}
+
+.puzzle-piece.is-highlighted .puzzle-piece__edge {
+  animation: edge-glow 1.6s ease-out forwards;
+}
+
+@keyframes piece-in {
+  from {
+    opacity: 0;
+    filter: brightness(1.6) saturate(0.4);
+  }
+  to {
+    opacity: 1;
+    filter: brightness(1) saturate(1);
+  }
+}
+
+@keyframes piece-glow {
+  0% {
+    filter: brightness(1.9) saturate(1.3) drop-shadow(0 0 24px rgba(255, 208, 110, 0.95));
+  }
+  100% {
+    filter: brightness(1) saturate(1) drop-shadow(0 0 0 rgba(255, 208, 110, 0));
+  }
+}
+
+@keyframes edge-glow {
+  0% {
+    stroke: var(--gold-2);
+    stroke-opacity: 1;
+    stroke-width: 5;
+  }
+  100% {
+    stroke: #160d02;
+    stroke-opacity: 0.55;
+    stroke-width: 2.5;
+  }
+}
+
+.eagle-puzzle.is-celebrating {
+  animation: eagle-celebrate 2.6s ease-in-out both;
+}
+
+@keyframes eagle-celebrate {
+  0% {
+    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 208, 110, 0));
+    transform: scale(1);
+  }
+  35% {
+    filter: brightness(1.5) drop-shadow(0 0 60px rgba(255, 208, 110, 0.9));
+    transform: scale(1.04);
+  }
+  100% {
+    filter: brightness(1.15) drop-shadow(0 0 30px rgba(255, 208, 110, 0.5));
+    transform: scale(1.02);
+  }
+}
+
+.eagle-puzzle.is-flying {
+  animation: eagle-fly 2.6s cubic-bezier(0.55, 0, 0.85, 0.35) both;
+}
+
+@keyframes eagle-fly {
+  0% {
+    transform: translate(0, 0) scale(1.02) rotate(0deg);
+    opacity: 1;
+  }
+  25% {
+    transform: translate(-1%, -4%) scale(1.06) rotate(-3deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(16%, -85%) scale(1.7) rotate(10deg);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   Screen shell
+   ========================================================================== */
+.screen-root {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 30% 8%, rgba(38, 70, 140, 0.35), transparent 60%),
+    radial-gradient(100% 80% at 85% 90%, rgba(245, 196, 81, 0.12), transparent 60%),
+    linear-gradient(160deg, var(--bg-2), var(--bg) 65%);
+}
+
+.screen-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(140, 170, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(140, 170, 255, 0.06) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(120% 80% at 50% 40%, black, transparent 75%);
+  pointer-events: none;
+}
+
+.screen-title {
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--gold-2);
+  text-shadow: 0 0 24px rgba(245, 196, 81, 0.45);
+}
+
+.text-glow-gold {
+  text-shadow: 0 0 30px rgba(245, 196, 81, 0.6), 0 0 60px rgba(245, 196, 81, 0.3);
+}
+
+.progress-track {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line);
+}
+
+.progress-fill {
+  background: linear-gradient(90deg, #b8801f, var(--gold), var(--gold-2));
+  box-shadow: 0 0 24px rgba(245, 196, 81, 0.6);
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.qr-card {
+  background: #ffffff;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+.badge {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(6px);
+}
+
+.connection-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #3ddc97;
+  box-shadow: 0 0 12px rgba(61, 220, 151, 0.9);
+}
+.connection-dot.is-off {
+  background: #ff6b6b;
+  box-shadow: 0 0 12px rgba(255, 107, 107, 0.9);
+}
+
+/* ==========================================================================
+   Capture (mobile)
+   ========================================================================== */
+.capture-root {
+  min-height: 100dvh;
+  background: linear-gradient(180deg, #05070d, #0b1120);
+}
+
+.capture-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+}
+
+.capture-shutter {
+  width: 84px;
+  height: 84px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 6px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transition: transform 0.12s ease;
+}
+.capture-shutter:active {
+  transform: scale(0.92);
+}
+.capture-shutter:disabled {
+  opacity: 0.5;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--gold-2), var(--gold));
+  color: #241703;
+  font-weight: 700;
+}
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #fff;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   Admin
+   ========================================================================== */
+.admin-root {
+  min-height: 100dvh;
+  background: linear-gradient(180deg, #060910, #0b1120);
+}
+
+.admin-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.piece-chip {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+}
+.piece-chip.is-filled {
+  border-color: rgba(245, 196, 81, 0.7);
+  background: rgba(245, 196, 81, 0.12);
+  color: var(--gold-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .puzzle-piece__photo,
+  .puzzle-piece.is-highlighted .puzzle-piece__photo,
+  .eagle-puzzle.is-celebrating,
+  .eagle-puzzle.is-flying {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
