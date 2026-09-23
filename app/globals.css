@@ -263,7 +263,13 @@ body {
 }
 
 .completion-title {
-  animation: title-in 1.1s ease-out both;
+  /* Mounts when the fly animation ends; the short delay adds a beat of
+     transition before the message appears. */
+  animation: title-in 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.45s both;
+}
+
+.completion-subtitle {
+  animation: title-in 0.9s ease-out 1.05s both;
 }
 
 @keyframes title-in {

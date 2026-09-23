@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type AnimationEvent,
+} from "react";
 import { EaglePuzzle } from "@/components/game/EaglePuzzle";
 import { QrPanel } from "@/components/game/QrPanel";
 import { useGameState } from "@/hooks/useGameState";
@@ -74,20 +81,25 @@ export default function ScreenPage() {
     prevCompleteRef.current = isComplete;
   }, [isComplete]);
 
-  useEffect(() => {
-    if (phase === "celebrate") {
-      // Hold the finished eagle long enough to be appreciated.
-      const timer = setTimeout(() => setPhase("flying"), 2200);
-      return () => clearTimeout(timer);
-    }
-    if (phase === "flying") {
-      // Matches the 12s `eagle-flight` keyframe timeline in globals.css.
-      const timer = setTimeout(() => setPhase("done"), 12000);
-      return () => clearTimeout(timer);
-    }
-  }, [phase]);
+  /**
+   * Phase transitions are driven by the actual CSS animations (not timers), so
+   * they stay in sync even if the durations change:
+   *   eagle-celebrate (hold + glow)  -> flying
+   *   eagle-flight    (fly away)     -> done
+   */
+  const handleAnimationEnd = useCallback(
+    (event: AnimationEvent<HTMLDivElement>) => {
+      if (event.animationName === "eagle-celebrate") {
+        setPhase((current) => (current === "celebrate" ? "flying" : current));
+      } else if (event.animationName === "eagle-flight") {
+        setPhase((current) => (current === "flying" ? "done" : current));
+      }
+    },
+    [],
+  );
 
-  const showCompletionText = phase !== "playing";
+  // The completion text only appears once the eagle has fully left the screen.
+  const showCompletionText = phase === "done";
 
   return (
     <main className="screen-root text-[var(--ink)]">
@@ -119,7 +131,7 @@ export default function ScreenPage() {
         {/* Main stage */}
         <section className="mt-[clamp(0.5rem,1.5vh,1.5rem)] flex min-h-0 flex-1 items-center gap-[clamp(1rem,3vw,3rem)]">
           <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center">
-            <div className="h-full w-full">
+            <div className="h-full w-full" onAnimationEnd={handleAnimationEnd}>
               {loading && !game ? (
                 <div className="flex h-full w-full items-center justify-center text-[var(--muted)]">
                   Đang tải...
@@ -141,11 +153,9 @@ export default function ScreenPage() {
                 <p className="completion-title text-center text-[clamp(1.4rem,4vw,4.5rem)] leading-none font-black tracking-[0.08em] text-[var(--gold-2)] text-glow-gold">
                   ĐẠI BÀNG ĐÃ TUNG CÁNH
                 </p>
-                {phase === "done" ? (
-                  <p className="mt-4 text-[clamp(0.7rem,1.1vw,1.1rem)] tracking-[0.3em] text-[var(--muted)] uppercase">
-                    Hoàn thành · Mở /admin để bắt đầu lượt mới
-                  </p>
-                ) : null}
+                <p className="completion-subtitle mt-4 text-[clamp(0.7rem,1.1vw,1.1rem)] tracking-[0.3em] text-[var(--muted)] uppercase">
+                  Hoàn thành · Mở /admin để bắt đầu lượt mới
+                </p>
               </div>
             ) : null}
           </div>
