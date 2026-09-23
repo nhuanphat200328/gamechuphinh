@@ -76,11 +76,13 @@ export default function ScreenPage() {
 
   useEffect(() => {
     if (phase === "celebrate") {
-      const timer = setTimeout(() => setPhase("flying"), 2600);
+      // Hold the finished eagle long enough to be appreciated.
+      const timer = setTimeout(() => setPhase("flying"), 2200);
       return () => clearTimeout(timer);
     }
     if (phase === "flying") {
-      const timer = setTimeout(() => setPhase("done"), 2600);
+      // Matches the 12s `eagle-flight` keyframe timeline in globals.css.
+      const timer = setTimeout(() => setPhase("done"), 12000);
       return () => clearTimeout(timer);
     }
   }, [phase]);
@@ -135,11 +137,7 @@ export default function ScreenPage() {
 
             {showCompletionText ? (
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <p
-                  className={`text-center text-[clamp(1.4rem,4vw,4.5rem)] leading-none font-black tracking-[0.08em] text-[var(--gold-2)] text-glow-gold transition-opacity duration-700 ${
-                    phase === "flying" || phase === "done" ? "opacity-100" : "opacity-0"
-                  }`}
-                >
+                <p className="completion-title text-center text-[clamp(1.4rem,4vw,4.5rem)] leading-none font-black tracking-[0.08em] text-[var(--gold-2)] text-glow-gold">
                   ĐẠI BÀNG ĐÃ TUNG CÁNH
                 </p>
                 {phase === "done" ? (

@@ -10,7 +10,7 @@ interface PuzzlePieceProps {
 }
 
 function PuzzlePieceImpl({ piece, imageUrl, highlight }: PuzzlePieceProps) {
-  const { index, pointsAttr, bbox, demoFrom, demoTo } = piece;
+  const { index, path, bbox, demoFrom, demoTo, decor } = piece;
   const clipId = `clip-piece-${index}`;
   const gradientId = `demo-piece-${index}`;
 
@@ -18,7 +18,7 @@ function PuzzlePieceImpl({ piece, imageUrl, highlight }: PuzzlePieceProps) {
     <g className={highlight ? "puzzle-piece is-highlighted" : "puzzle-piece"}>
       <defs>
         <clipPath id={clipId}>
-          <polygon points={pointsAttr} />
+          <path d={path} />
         </clipPath>
         <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor={demoFrom} />
@@ -27,31 +27,26 @@ function PuzzlePieceImpl({ piece, imageUrl, highlight }: PuzzlePieceProps) {
       </defs>
 
       <g clipPath={`url(#${clipId})`}>
-        <polygon
-          points={pointsAttr}
+        <path
+          d={path}
           fill={`url(#${gradientId})`}
           stroke="#160d02"
           strokeWidth={3}
           strokeLinejoin="round"
         />
 
-        {/* Demo-only face markings on the two head facets. They sit under the
-            photo, so they vanish as soon as the piece is filled. */}
-        {!imageUrl && (index === 1 || index === 2) ? (
+        {/* Demo-only eye marking on the head piece. It sits under the photo,
+            so it vanishes as soon as the piece is filled. */}
+        {!imageUrl && decor === "eye" ? (
           <g className="puzzle-piece__marks">
-            <polygon
-              points="486,120 500,150 514,120"
-              fill="#e0a63a"
-              stroke="#2a1a06"
-              strokeWidth={2}
-              strokeLinejoin="round"
-            />
-            <circle cx={index === 1 ? 478 : 522} cy={70} r={7} fill="#1b1206" />
-            <circle
-              cx={index === 1 ? 480 : 520}
-              cy={68}
-              r={2.4}
-              fill="#fff3cf"
+            <circle cx={636} cy={236} r={15} fill="#141007" />
+            <circle cx={642} cy={230} r={4.5} fill="#fff6dc" />
+            <path
+              d="M606 210 C626 200 652 202 668 216"
+              fill="none"
+              stroke="#3a2c18"
+              strokeWidth={6}
+              strokeLinecap="round"
             />
           </g>
         ) : null}
@@ -69,9 +64,9 @@ function PuzzlePieceImpl({ piece, imageUrl, highlight }: PuzzlePieceProps) {
         ) : null}
       </g>
 
-      <polygon
+      <path
         className="puzzle-piece__edge"
-        points={pointsAttr}
+        d={path}
         fill="none"
         stroke="#160d02"
         strokeWidth={2.5}

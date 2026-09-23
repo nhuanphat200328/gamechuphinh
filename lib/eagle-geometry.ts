@@ -1,17 +1,17 @@
 /**
  * Eagle puzzle geometry.
  *
- * The eagle is a symmetric low-poly illustration drawn in a 1000x640
- * coordinate system. It is split into 10 irregular facets (5 on the left
- * half, mirrored to the right). Each facet is a puzzle piece.
+ * A perched bald eagle (white head, hooked yellow beak, dark brown body and
+ * wings, white tail, yellow legs/talons) drawn in a 1000x1000 coordinate
+ * system and split into 10 body-part pieces.
  *
- * To change the number of pieces, the eagle image or an individual piece
- * shape, edit the point table / facet list below — the rest of the app reads
- * everything from `EAGLE_PIECES`.
+ * The array order is the back-to-front draw order (body first, head/talons on
+ * top) and `index` matches `puzzle_pieces.piece_index`. Editing the `EAGLE_ART`
+ * list below is the only place that needs to change to adjust the artwork.
  */
 
 export const BOARD_WIDTH = 1000;
-export const BOARD_HEIGHT = 640;
+export const BOARD_HEIGHT = 1000;
 
 export type Point = readonly [number, number];
 
@@ -25,104 +25,131 @@ export interface BoundingBox {
 export interface EaglePiece {
   /** 1-based index, matches `puzzle_pieces.piece_index`. */
   index: number;
-  points: Point[];
-  /** `points` serialized for the SVG `points` attribute. */
-  pointsAttr: string;
-  /** `points` serialized for an SVG `clipPath` polygon. */
+  /** SVG path (in board coordinates) used as the piece shape / clip. */
+  path: string;
   bbox: BoundingBox;
   center: Point;
   /** Demo gradient stops used while the piece has no user photo. */
   demoFrom: string;
   demoTo: string;
+  /** Optional demo-only marking (the eye lives in the head piece). */
+  decor?: "eye";
 }
 
-const MIRROR_X = BOARD_WIDTH;
-
-function mirror([x, y]: Point): Point {
-  return [MIRROR_X - x, y];
+interface ArtPart {
+  path: string;
+  demoFrom: string;
+  demoTo: string;
+  decor?: "eye";
 }
 
-function mirrorAll(points: Point[]): Point[] {
-  return points.map(mirror);
-}
-
-// --- Key vertices (left half) --------------------------------------------
-const T: Point = [500, 24]; // top of the head
-const M1: Point = [500, 150]; // beak / chin
-const M2: Point = [500, 250]; // chest
-const M3: Point = [500, 430]; // lower body
-const B: Point = [500, 628]; // tail tip
-
-const a1: Point = [462, 52]; // head upper-left
-const a2: Point = [430, 96]; // head lower-left
-const a3: Point = [352, 150]; // neck / shoulder
-const a4: Point = [258, 112]; // wing leading edge (inner)
-const a5: Point = [108, 128]; // wing leading edge (outer)
-const a6: Point = [56, 216]; // wing tip
-const a7: Point = [196, 238]; // wing trailing edge (outer)
-const a8: Point = [322, 224]; // wing trailing edge (inner)
-const a9: Point = [432, 268]; // body shoulder
-const a10: Point = [476, 452]; // body lower-left
-
-// --- Left-half facets -----------------------------------------------------
-const leftFacets: Point[][] = [
-  [T, a1, a2, M1], // 1 head
-  [a2, a3, a9, M2, M1], // 2 neck / upper chest
-  [a3, a4, a8, a9], // 3 inner wing
-  [a4, a5, a6, a7, a8], // 4 outer wing
-  [a9, a10, B, M3, M2], // 5 body / tail
+// Back-to-front draw order.
+const EAGLE_ART: ArtPart[] = [
+  {
+    // body core
+    path: "M430 430 C356 522 348 686 410 794 C470 894 604 902 664 800 C716 712 704 556 640 458 C598 396 480 388 430 430 Z",
+    demoFrom: "#6e4622",
+    demoTo: "#2f1d0b",
+  },
+  {
+    // chest / breast
+    path: "M566 424 C646 436 702 526 690 646 C680 748 626 826 556 846 C590 742 600 596 566 424 Z",
+    demoFrom: "#8a5a2c",
+    demoTo: "#452a12",
+  },
+  {
+    // tail (white)
+    path: "M452 792 C408 846 344 900 278 942 C332 966 406 958 458 920 C500 890 520 848 528 806 C504 796 478 792 452 792 Z",
+    demoFrom: "#f0ece2",
+    demoTo: "#b8b0a0",
+  },
+  {
+    // lower wing / flight feathers
+    path: "M392 648 C356 736 314 824 250 896 C304 918 374 900 416 848 C458 796 496 718 524 636 C482 606 434 612 392 648 Z",
+    demoFrom: "#402511",
+    demoTo: "#150b03",
+  },
+  {
+    // upper wing / coverts
+    path: "M486 438 C408 468 372 562 384 664 C436 622 486 604 528 616 C548 544 530 470 486 438 Z",
+    demoFrom: "#7a4d24",
+    demoTo: "#3b2410",
+  },
+  {
+    // neck (white)
+    path: "M566 322 C520 376 478 424 470 480 C520 480 582 466 616 424 C630 380 616 344 594 322 C584 316 574 318 566 322 Z",
+    demoFrom: "#efeade",
+    demoTo: "#b0a58f",
+  },
+  {
+    // head (white) with eye marking
+    path: "M526 249 C518 170 585 128 654 146 C715 163 748 222 726 279 C708 327 656 341 605 328 C559 317 529 295 526 249 Z",
+    demoFrom: "#f6f2ea",
+    demoTo: "#cbc2ae",
+    decor: "eye",
+  },
+  {
+    // beak (hooked, yellow)
+    path: "M698 240 C744 246 782 268 796 298 C806 322 794 346 772 352 C782 332 772 312 744 302 C718 294 700 291 696 282 Z",
+    demoFrom: "#ffd24a",
+    demoTo: "#dd9518",
+  },
+  {
+    // legs (yellow) - two sub-paths
+    path: "M556 792 C550 836 560 874 582 902 L616 902 C610 864 600 832 594 792 Z M616 792 C614 836 626 874 648 902 L680 902 C674 864 662 832 656 792 Z",
+    demoFrom: "#f2bb3c",
+    demoTo: "#bf7f16",
+  },
+  {
+    // talons (yellow)
+    path: "M540 892 C566 918 622 926 666 918 C698 912 710 898 696 888 C662 900 596 900 564 886 Z",
+    demoFrom: "#e0a52a",
+    demoTo: "#9c6612",
+  },
 ];
 
-// Fill order: head → neck → inner wings → outer wings → body.
-const fillOrder: Array<{ points: Point[]; demoFrom: string; demoTo: string }> = [];
-
-leftFacets.forEach((points, i) => {
-  const palette = [
-    { demoFrom: "#ffe7a3", demoTo: "#c98f2c" }, // head
-    { demoFrom: "#f7d178", demoTo: "#a8701f" }, // neck
-    { demoFrom: "#efc25c", demoTo: "#8f5c16" }, // inner wing
-    { demoFrom: "#dba63f", demoTo: "#6f430f" }, // outer wing
-    { demoFrom: "#c98f2c", demoTo: "#5a350c" }, // body
-  ][i];
-
-  // left, then mirrored right
-  fillOrder.push({ points, ...palette });
-  fillOrder.push({ points: mirrorAll(points), ...palette });
-});
-
-function computeBBox(points: Point[]): BoundingBox {
+/**
+ * Bounding box from a path's coordinate pairs. Curves stay inside the convex
+ * hull of their control points, so this is a safe (slightly generous) box that
+ * always fully contains the shape.
+ */
+function pathBBox(path: string): BoundingBox {
+  const numbers = (path.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
-  for (const [x, y] of points) {
+
+  for (let i = 0; i + 1 < numbers.length; i += 2) {
+    const x = numbers[i];
+    const y = numbers[i + 1];
     if (x < minX) minX = x;
     if (y < minY) minY = y;
     if (x > maxX) maxX = x;
     if (y > maxY) maxY = y;
   }
-  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+
+  const pad = 8;
+  return {
+    x: minX - pad,
+    y: minY - pad,
+    width: maxX - minX + pad * 2,
+    height: maxY - minY + pad * 2,
+  };
 }
 
-function computeCenter(points: Point[]): Point {
-  let sx = 0;
-  let sy = 0;
-  for (const [x, y] of points) {
-    sx += x;
-    sy += y;
-  }
-  return [sx / points.length, sy / points.length];
-}
-
-export const EAGLE_PIECES: EaglePiece[] = fillOrder.map((facet, i) => ({
-  index: i + 1,
-  points: facet.points,
-  pointsAttr: facet.points.map(([x, y]) => `${x},${y}`).join(" "),
-  bbox: computeBBox(facet.points),
-  center: computeCenter(facet.points),
-  demoFrom: facet.demoFrom,
-  demoTo: facet.demoTo,
-}));
+export const EAGLE_PIECES: EaglePiece[] = EAGLE_ART.map((part, i) => {
+  const bbox = pathBBox(part.path);
+  return {
+    index: i + 1,
+    path: part.path,
+    bbox,
+    center: [bbox.x + bbox.width / 2, bbox.y + bbox.height / 2] as Point,
+    demoFrom: part.demoFrom,
+    demoTo: part.demoTo,
+    decor: part.decor,
+  };
+});
 
 export const TOTAL_EAGLE_PIECES = EAGLE_PIECES.length;
 

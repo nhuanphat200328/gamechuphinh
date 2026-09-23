@@ -95,6 +95,35 @@ export function CaptureClient({ initialGameId }: CaptureClientProps) {
     }
   }, []);
 
+  /** Fallback camera picker for browsers that ignore `facingMode`. */
+  const getDeviceIdForFacing = useCallback(
+    async (preferred: Facing): Promise<string | null> => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cameras = devices.filter((d) => d.kind === "videoinput");
+        if (cameras.length === 0) return null;
+
+        const pattern =
+          preferred === "environment"
+            ? /(back|rear|environment|main|wide)/i
+            : /(front|face|user|selfie)/i;
+
+        const matched = cameras.find((c) => c.label && pattern.test(c.label));
+        if (matched?.deviceId) return matched.deviceId;
+
+        // No usable labels: guess by typical ordering.
+        const guess =
+          preferred === "environment"
+            ? cameras[cameras.length - 1]
+            : cameras[0];
+        return guess?.deviceId || null;
+      } catch {
+        return null;
+      }
+    },
+    [],
+  );
+
   const startCamera = useCallback(
     async (preferred: Facing): Promise<boolean> => {
       setErrorMessage(null);
@@ -107,41 +136,66 @@ export function CaptureClient({ initialGameId }: CaptureClientProps) {
         return false;
       }
 
+      // Always release the previous stream first so the camera is never held
+      // open by two streams at once.
+      stopCamera();
       setMode("starting");
+
+      const base: MediaTrackConstraints = {
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+      };
+      const getStream = (video: MediaTrackConstraints) =>
+        navigator.mediaDevices.getUserMedia({ video, audio: false });
+
+      let stream: MediaStream | null = null;
+      let lastError: unknown = null;
+
+      // 1) Preferred: facingMode hint (rear by default).
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: preferred },
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-          },
-          audio: false,
-        });
-
-        stopCamera();
-        streamRef.current = stream;
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play().catch(() => undefined);
-        }
-
-        setMode("camera");
-        void detectMultipleCameras();
-        return true;
+        stream = await getStream({ ...base, facingMode: { ideal: preferred } });
       } catch (error) {
-        // If a stream is already running (e.g. a failed camera switch), keep it.
-        if (streamRef.current) {
-          setErrorMessage("Không thể chuyển camera. Vui lòng thử lại.");
-          setMode("camera");
-        } else {
-          setErrorMessage(describeCameraError(error));
-          setMode("error");
+        lastError = error;
+      }
+
+      // 2) Fallback: pick an explicit camera by deviceId.
+      if (!stream) {
+        const deviceId = await getDeviceIdForFacing(preferred);
+        if (deviceId) {
+          try {
+            stream = await getStream({ ...base, deviceId: { exact: deviceId } });
+          } catch (error) {
+            lastError = error;
+          }
         }
+      }
+
+      // 3) Last resort: any available camera.
+      if (!stream) {
+        try {
+          stream = await getStream(base);
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      if (!stream) {
+        setErrorMessage(describeCameraError(lastError));
+        setMode("error");
         return false;
       }
+
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play().catch(() => undefined);
+      }
+
+      setMode("camera");
+      void detectMultipleCameras();
+      return true;
     },
-    [detectMultipleCameras, stopCamera],
+    [detectMultipleCameras, getDeviceIdForFacing, stopCamera],
   );
 
   const handleSwitchCamera = useCallback(async () => {
@@ -244,8 +298,8 @@ export function CaptureClient({ initialGameId }: CaptureClientProps) {
     result !== null && result.completedPieces < result.totalPieces;
 
   return (
-    <main className="capture-root flex flex-col text-[var(--ink)]">
-      <header className="flex items-center justify-between px-5 pt-6 pb-3">
+    <main className="capture-root text-[var(--ink)]">
+      <header className="capture-header">
         <div>
           <p className="text-[0.6rem] tracking-[0.3em] text-[var(--gold)] uppercase">
             Eagle Wings
@@ -259,8 +313,8 @@ export function CaptureClient({ initialGameId }: CaptureClientProps) {
         ) : null}
       </header>
 
-      <div className="relative flex-1 overflow-hidden px-3 pb-3">
-        <div className="relative h-full min-h-[62dvh] w-full overflow-hidden rounded-3xl border border-white/10 bg-black">
+      <div className="capture-stage">
+        <div className="capture-frame">
           {/* Live camera */}
           <video
             ref={videoRef}
@@ -393,7 +447,7 @@ export function CaptureClient({ initialGameId }: CaptureClientProps) {
       </div>
 
       {/* Controls */}
-      <div className="px-5 pb-8">
+      <div className="capture-controls">
         {errorMessage && mode !== "error" ? (
           <p className="mb-3 text-center text-sm text-red-300">{errorMessage}</p>
         ) : null}

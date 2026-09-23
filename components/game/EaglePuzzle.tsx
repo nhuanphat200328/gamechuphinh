@@ -66,6 +66,16 @@ export function EaglePuzzle({
           fill="url(#eagle-aura)"
         />
 
+        <ellipse
+          className="eagle-puzzle__shadow"
+          cx={500}
+          cy={934}
+          rx={232}
+          ry={26}
+          fill="#000000"
+          opacity={0.28}
+        />
+
         {EAGLE_PIECES.filter((piece) => piece.index <= totalPieces).map(
           (piece) => {
             const model = piecesByIndex.get(piece.index);

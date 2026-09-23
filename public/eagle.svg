@@ -1,57 +1,75 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" width="1000" height="640" role="img" aria-label="Eagle">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000" role="img" aria-label="Đại bàng đang đậu">
   <defs>
-    <linearGradient id="f1" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffe7a3"/>
-      <stop offset="1" stop-color="#c98f2c"/>
+    <linearGradient id="gHead" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#f6f2ea"/>
+      <stop offset="1" stop-color="#cbc2ae"/>
     </linearGradient>
-    <linearGradient id="f2" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f7d178"/>
-      <stop offset="1" stop-color="#a8701f"/>
+    <linearGradient id="gBeak" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#ffd24a"/>
+      <stop offset="1" stop-color="#dd9518"/>
     </linearGradient>
-    <linearGradient id="f3" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#efc25c"/>
-      <stop offset="1" stop-color="#8f5c16"/>
+    <linearGradient id="gNeck" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#efeade"/>
+      <stop offset="1" stop-color="#b0a58f"/>
     </linearGradient>
-    <linearGradient id="f4" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#dba63f"/>
-      <stop offset="1" stop-color="#6f430f"/>
+    <linearGradient id="gChest" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#8a5a2c"/>
+      <stop offset="1" stop-color="#452a12"/>
     </linearGradient>
-    <linearGradient id="f5" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#c98f2c"/>
-      <stop offset="1" stop-color="#5a350c"/>
+    <linearGradient id="gBody" x1="0" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#6e4622"/>
+      <stop offset="1" stop-color="#2f1d0b"/>
     </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="35%" r="70%">
-      <stop offset="0" stop-color="#ffcf6b" stop-opacity="0.35"/>
-      <stop offset="1" stop-color="#ffcf6b" stop-opacity="0"/>
-    </radialGradient>
+    <linearGradient id="gTail" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#f0ece2"/>
+      <stop offset="1" stop-color="#b8b0a0"/>
+    </linearGradient>
+    <linearGradient id="gWingLow" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#402511"/>
+      <stop offset="1" stop-color="#150b03"/>
+    </linearGradient>
+    <linearGradient id="gWingUp" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#7a4d24"/>
+      <stop offset="1" stop-color="#3b2410"/>
+    </linearGradient>
+    <linearGradient id="gLeg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f2bb3c"/>
+      <stop offset="1" stop-color="#bf7f16"/>
+    </linearGradient>
+    <linearGradient id="gTalon" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e0a52a"/>
+      <stop offset="1" stop-color="#9c6612"/>
+    </linearGradient>
   </defs>
 
-  <rect width="1000" height="640" fill="none"/>
-  <ellipse cx="500" cy="300" rx="470" ry="300" fill="url(#glow)"/>
+  <ellipse cx="500" cy="934" rx="232" ry="26" fill="#000000" opacity="0.28"/>
 
-  <g stroke="#2a1a06" stroke-width="2" stroke-opacity="0.55" stroke-linejoin="round">
-    <!-- head -->
-    <polygon points="500,24 462,52 430,96 500,150" fill="url(#f1)"/>
-    <polygon points="500,24 538,52 570,96 500,150" fill="url(#f1)"/>
-    <!-- neck / upper chest -->
-    <polygon points="430,96 352,150 432,268 500,250 500,150" fill="url(#f2)"/>
-    <polygon points="570,96 648,150 568,268 500,250 500,150" fill="url(#f2)"/>
-    <!-- inner wing -->
-    <polygon points="352,150 258,112 322,224 432,268" fill="url(#f3)"/>
-    <polygon points="648,150 742,112 678,224 568,268" fill="url(#f3)"/>
-    <!-- outer wing -->
-    <polygon points="258,112 108,128 56,216 196,238 322,224" fill="url(#f4)"/>
-    <polygon points="742,112 892,128 944,216 804,238 678,224" fill="url(#f4)"/>
-    <!-- body / tail -->
-    <polygon points="432,268 476,452 500,628 500,430 500,250" fill="url(#f5)"/>
-    <polygon points="568,268 524,452 500,628 500,430 500,250" fill="url(#f5)"/>
+  <g stroke="#1c1206" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+    <!-- 5 body core -->
+    <path fill="url(#gBody)" d="M430 430 C356 522 348 686 410 794 C470 894 604 902 664 800 C716 712 704 556 640 458 C598 396 480 388 430 430 Z"/>
+    <!-- 4 chest -->
+    <path fill="url(#gChest)" d="M566 424 C646 436 702 526 690 646 C680 748 626 826 556 846 C590 742 600 596 566 424 Z"/>
+    <!-- 6 tail -->
+    <path fill="url(#gTail)" d="M452 792 C408 846 344 900 278 942 C332 966 406 958 458 920 C500 890 520 848 528 806 C504 796 478 792 452 792 Z"/>
+    <!-- 7 wing lower -->
+    <path fill="url(#gWingLow)" d="M392 648 C356 736 314 824 250 896 C304 918 374 900 416 848 C458 796 496 718 524 636 C482 606 434 612 392 648 Z"/>
+    <!-- 8 wing upper -->
+    <path fill="url(#gWingUp)" d="M486 438 C408 468 372 562 384 664 C436 622 486 604 528 616 C548 544 530 470 486 438 Z"/>
+    <!-- 3 neck -->
+    <path fill="url(#gNeck)" d="M566 322 C520 376 478 424 470 480 C520 480 582 466 616 424 C630 380 616 344 594 322 C584 316 574 318 566 322 Z"/>
+    <!-- 1 head -->
+    <path fill="url(#gHead)" d="M526 249 C518 170 585 128 654 146 C715 163 748 222 726 279 C708 327 656 341 605 328 C559 317 529 295 526 249 Z"/>
+    <!-- 2 beak -->
+    <path fill="url(#gBeak)" d="M698 240 C744 246 782 268 796 298 C806 322 794 346 772 352 C782 332 772 312 744 302 C718 294 700 291 696 282 Z"/>
+    <!-- 9 legs -->
+    <path fill="url(#gLeg)" d="M556 792 C550 836 560 874 582 902 L616 902 C610 864 600 832 594 792 Z"/>
+    <path fill="url(#gLeg)" d="M616 792 C614 836 626 874 648 902 L680 902 C674 864 662 832 656 792 Z"/>
+    <!-- 10 talons -->
+    <path fill="url(#gTalon)" d="M540 892 C566 918 622 926 666 918 C698 912 710 898 696 888 C662 900 596 900 564 886 Z"/>
   </g>
 
-  <!-- beak -->
-  <polygon points="486,120 500,150 514,120" fill="#e0a63a" stroke="#2a1a06" stroke-width="2" stroke-opacity="0.5" stroke-linejoin="round"/>
-  <!-- eyes -->
-  <circle cx="478" cy="70" r="7" fill="#1b1206"/>
-  <circle cx="522" cy="70" r="7" fill="#1b1206"/>
-  <circle cx="480" cy="68" r="2.4" fill="#fff3cf"/>
-  <circle cx="524" cy="68" r="2.4" fill="#fff3cf"/>
+  <!-- eye -->
+  <circle cx="636" cy="236" r="15" fill="#141007"/>
+  <circle cx="642" cy="230" r="4.5" fill="#fff6dc"/>
+  <path d="M606 210 C626 200 652 202 668 216" fill="none" stroke="#3a2c18" stroke-width="6" stroke-linecap="round"/>
 </svg>
