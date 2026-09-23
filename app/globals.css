@@ -220,6 +220,10 @@ body {
   background: #000;
 }
 
+.capture-video.is-mirrored {
+  transform: scaleX(-1);
+}
+
 .capture-shutter {
   width: 84px;
   height: 84px;

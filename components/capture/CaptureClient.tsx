@@ -22,6 +22,30 @@ interface CaptureClientProps {
   initialGameId?: string;
 }
 
+type Facing = "environment" | "user";
+
+function SwitchCameraIcon() {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+      <path d="M9.5 13.5a3 3 0 0 1 5.2-2" />
+      <path d="M15.5 12.5a3 3 0 0 1-5.2 2" />
+      <path d="M14.7 9.5v2h-2" />
+      <path d="M10.3 16.5v-2h2" />
+    </svg>
+  );
+}
+
 function describeCameraError(error: unknown): string {
   if (error instanceof DOMException) {
     switch (error.name) {
@@ -51,6 +75,9 @@ export function CaptureClient({ initialGameId }: CaptureClientProps) {
   const [result, setResult] = useState<SubmitPhotoResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [facing, setFacing] = useState<Facing>("environment");
+  const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
+  const [switching, setSwitching] = useState(false);
 
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -58,39 +85,74 @@ export function CaptureClient({ initialGameId }: CaptureClientProps) {
     if (videoRef.current) videoRef.current.srcObject = null;
   }, []);
 
-  const startCamera = useCallback(async () => {
-    setErrorMessage(null);
-
-    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-      setMode("fallback");
-      return;
-    }
-
-    setMode("starting");
+  const detectMultipleCameras = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-        },
-        audio: false,
-      });
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cameras = devices.filter((device) => device.kind === "videoinput");
+      setHasMultipleCameras(cameras.length > 1);
+    } catch {
+      setHasMultipleCameras(false);
+    }
+  }, []);
 
-      stopCamera();
-      streamRef.current = stream;
+  const startCamera = useCallback(
+    async (preferred: Facing): Promise<boolean> => {
+      setErrorMessage(null);
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play().catch(() => undefined);
+      if (
+        typeof navigator === "undefined" ||
+        !navigator.mediaDevices?.getUserMedia
+      ) {
+        setMode("fallback");
+        return false;
       }
 
-      setMode("camera");
-    } catch (error) {
-      setErrorMessage(describeCameraError(error));
-      setMode("error");
-    }
-  }, [stopCamera]);
+      setMode("starting");
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: preferred },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+          },
+          audio: false,
+        });
+
+        stopCamera();
+        streamRef.current = stream;
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play().catch(() => undefined);
+        }
+
+        setMode("camera");
+        void detectMultipleCameras();
+        return true;
+      } catch (error) {
+        // If a stream is already running (e.g. a failed camera switch), keep it.
+        if (streamRef.current) {
+          setErrorMessage("Không thể chuyển camera. Vui lòng thử lại.");
+          setMode("camera");
+        } else {
+          setErrorMessage(describeCameraError(error));
+          setMode("error");
+        }
+        return false;
+      }
+    },
+    [detectMultipleCameras, stopCamera],
+  );
+
+  const handleSwitchCamera = useCallback(async () => {
+    if (switching) return;
+    const next: Facing = facing === "environment" ? "user" : "environment";
+    setSwitching(true);
+    setFacing(next);
+    const ok = await startCamera(next);
+    if (!ok) setFacing(facing);
+    setSwitching(false);
+  }, [facing, startCamera, switching]);
 
   // Resolve the active game id (from the QR query string or the server).
   useEffect(() => {
@@ -108,7 +170,7 @@ export function CaptureClient({ initialGameId }: CaptureClientProps) {
   }, [gameId]);
 
   useEffect(() => {
-    void startCamera();
+    void startCamera("environment");
     return () => stopCamera();
   }, [startCamera, stopCamera]);
 
@@ -147,8 +209,8 @@ export function CaptureClient({ initialGameId }: CaptureClientProps) {
     setProcessed(null);
     setResult(null);
     setErrorMessage(null);
-    void startCamera();
-  }, [startCamera]);
+    void startCamera(facing);
+  }, [facing, startCamera]);
 
   const handleSubmit = useCallback(async () => {
     if (!processed || !gameId || submitting) return;
@@ -202,12 +264,30 @@ export function CaptureClient({ initialGameId }: CaptureClientProps) {
           {/* Live camera */}
           <video
             ref={videoRef}
-            className="capture-video"
+            className={
+              facing === "user" && mode !== "preview" && mode !== "uploading"
+                ? "capture-video is-mirrored"
+                : "capture-video"
+            }
             style={{ display: mode === "camera" || mode === "starting" ? "block" : "none" }}
             playsInline
             muted
             autoPlay
           />
+
+          {/* Switch front / back camera */}
+          {(mode === "camera" || mode === "starting") && hasMultipleCameras ? (
+            <button
+              type="button"
+              onClick={() => void handleSwitchCamera()}
+              disabled={switching || mode === "starting"}
+              aria-label="Đổi camera trước/sau"
+              title="Đổi camera trước/sau"
+              className="absolute top-4 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur transition-transform active:scale-90 disabled:opacity-50"
+            >
+              <SwitchCameraIcon />
+            </button>
+          ) : null}
 
           {/* Preview */}
           {mode === "preview" || mode === "uploading" ? (
@@ -291,7 +371,7 @@ export function CaptureClient({ initialGameId }: CaptureClientProps) {
               <div className="flex flex-wrap items-center justify-center gap-3">
                 <button
                   type="button"
-                  onClick={() => void startCamera()}
+                  onClick={() => void startCamera(facing)}
                   className="btn-primary rounded-full px-6 py-3"
                 >
                   Thử lại camera
