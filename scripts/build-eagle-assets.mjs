@@ -135,7 +135,10 @@ console.log(`perch  -> public/pictures/daibang.png (${perch.width}x${perch.heigh
   for (let k = 1; k <= 4; k++)
     uLines.push(umin + (umax - umin) * (k / 5) + Math.sin(k * 2.3) * (umax - umin) * 0.03);
   uLines.push(umax);
-  const vMid = vmin + (vmax - vmin) * 0.5 + (vmax - vmin) * 0.06;
+  // Split the two columns on the median of the eagle's pixels so both sides
+  // hold a similar amount of the bird (previously biased to the right).
+  const vs = pts.map((p) => toUV(p)[1]).sort((a, b) => a - b);
+  const vMid = vs[Math.floor(vs.length / 2)];
   const cells = [];
   for (let i = 0; i < 5; i++)
     for (let j = 0; j < 2; j++) {
