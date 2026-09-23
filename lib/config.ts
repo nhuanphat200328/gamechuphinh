@@ -18,8 +18,12 @@ export const DEFAULT_TOTAL_PIECES = Number(
   readEnv("GAME_TOTAL_PIECES") || EAGLE_PIECES.length,
 );
 
+/** Real eagle artwork (in /public/pictures). */
+export const EAGLE_BASE_IMAGE = "/pictures/daibang.png";
+export const EAGLE_FLYING_IMAGE = "/pictures/daibangbay.png";
+
 /** Demo image used for fresh pieces (relative to /public). */
-export const DEMO_IMAGE_URL = "/eagle.svg";
+export const DEMO_IMAGE_URL = EAGLE_BASE_IMAGE;
 
 /** Largest edge (px) an uploaded photo is resized to before upload. */
 export const MAX_UPLOAD_EDGE = 1800;

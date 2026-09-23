@@ -130,7 +130,8 @@ export default function ScreenPage() {
                   totalPieces={total}
                   highlighted={highlight}
                   celebrating={phase === "celebrate"}
-                  flying={phase === "flying"}
+                  flying={phase === "flying" || phase === "done"}
+                  showFlying={phase !== "playing"}
                 />
               )}
             </div>

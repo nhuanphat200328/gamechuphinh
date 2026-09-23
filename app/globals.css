@@ -131,6 +131,7 @@ body {
   0% {
     transform: translate(0, 0) scale(1.02) rotate(0deg);
     opacity: 1;
+    filter: brightness(1.28) drop-shadow(0 0 34px rgba(255, 208, 110, 0.55));
     animation-timing-function: ease-in-out;
   }
   /* anticipation - crouch before takeoff */
@@ -149,6 +150,7 @@ body {
   22% {
     transform: translate(-1%, -3.2%) scale(1.05) rotate(2.5deg);
     opacity: 1;
+    filter: brightness(1.12) drop-shadow(0 0 22px rgba(255, 208, 110, 0.35));
     animation-timing-function: ease-in-out;
   }
   /* wing flap up */
@@ -167,6 +169,7 @@ body {
   46% {
     transform: translate(3%, -13%) scale(1.13) rotate(-1deg);
     opacity: 1;
+    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 208, 110, 0));
     animation-timing-function: ease-in-out;
   }
   /* climb */
@@ -190,6 +193,37 @@ body {
   100% {
     transform: translate(38%, -146%) scale(1.72) rotate(12deg);
     opacity: 0;
+  }
+}
+
+/* Completion crossfade: perched eagle -> spread-wing flying eagle. */
+.eagle-layer--fly {
+  opacity: 0;
+}
+
+.eagle-puzzle.is-complete .eagle-layer--perch {
+  animation: layer-out 1.2s ease-in forwards;
+}
+
+.eagle-puzzle.is-complete .eagle-layer--fly {
+  animation: layer-in 1.4s ease-out 0.6s forwards;
+}
+
+@keyframes layer-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes layer-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 
