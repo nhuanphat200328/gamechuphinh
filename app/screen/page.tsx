@@ -9,6 +9,7 @@ import {
   type AnimationEvent,
 } from "react";
 import { EaglePuzzle } from "@/components/game/EaglePuzzle";
+import { FlightEffects } from "@/components/game/FlightEffects";
 import { QrPanel } from "@/components/game/QrPanel";
 import { useGameState } from "@/hooks/useGameState";
 import { resolveSiteUrl } from "@/lib/config";
@@ -102,7 +103,9 @@ export default function ScreenPage() {
   const showCompletionText = phase === "done";
 
   return (
-    <main className="screen-root text-[var(--ink)]">
+    <main
+      className={`screen-root text-[var(--ink)] ${phase === "flying" ? "is-takeoff" : ""}`}
+    >
       <div className="screen-grid" />
 
       <div className="relative z-10 flex h-full w-full flex-col px-[clamp(1rem,2.5vw,3rem)] py-[clamp(0.75rem,2vh,2rem)]">
@@ -147,6 +150,8 @@ export default function ScreenPage() {
                 />
               )}
             </div>
+
+            <FlightEffects active={phase === "celebrate" || phase === "flying"} />
 
             {showCompletionText ? (
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">

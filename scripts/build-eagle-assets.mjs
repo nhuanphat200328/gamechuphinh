@@ -46,12 +46,12 @@ const PALETTE = {
 };
 const paletteNames = Object.keys(PALETTE);
 
-function classify(i) {
-  const a = data[(i << 2) + 3];
+function classifyPixel(pngData, i) {
+  const a = pngData[(i << 2) + 3];
   if (a < 32) return null;
-  const r = data[i << 2];
-  const g = data[(i << 2) + 1];
-  const b = data[(i << 2) + 2];
+  const r = pngData[i << 2];
+  const g = pngData[(i << 2) + 1];
+  const b = pngData[(i << 2) + 2];
   let best = null;
   let bd = Infinity;
   for (const n of paletteNames) {
@@ -66,7 +66,7 @@ function classify(i) {
 }
 
 const cls = new Array(W * H);
-for (let i = 0; i < W * H; i++) cls[i] = classify(i);
+for (let i = 0; i < W * H; i++) cls[i] = classifyPixel(data, i);
 
 // --- connected components per colour ----------------------------------------
 const labels = new Int32Array(W * H).fill(-1);
@@ -324,6 +324,180 @@ writeFileSync(
     `export const PIECE_POLYGONS: string[] = [\n${polysLiteral}\n];\n`,
 );
 console.log("pieces -> lib/eagle-pieces.generated.ts");
+
+// --- 5b. flight rig: split the flying eagle into body + two wings -----------
+{
+  const fly = PNG.sync.read(readFileSync(SRC_FLY));
+  const fw = fly.width;
+  const fh = fly.height;
+  const fdata = fly.data;
+  const fcls = new Array(fw * fh);
+  for (let i = 0; i < fw * fh; i++) fcls[i] = classifyPixel(fdata, i);
+
+  const flabels = new Int32Array(fw * fh).fill(-1);
+  const fcomps = [];
+  for (let y = 0; y < fh; y++) {
+    for (let x = 0; x < fw; x++) {
+      const i = y * fw + x;
+      if (flabels[i] !== -1 || !fcls[i]) continue;
+      const color = fcls[i];
+      const stack = [i];
+      flabels[i] = fcomps.length;
+      const px = [];
+      while (stack.length) {
+        const j = stack.pop();
+        px.push(j);
+        const jx = j % fw;
+        const jy = (j / fw) | 0;
+        const nb = [
+          jx > 0 ? j - 1 : -1,
+          jx < fw - 1 ? j + 1 : -1,
+          jy > 0 ? j - fw : -1,
+          jy < fh - 1 ? j + fw : -1,
+        ];
+        for (const k of nb) {
+          if (k >= 0 && flabels[k] === -1 && fcls[k] === color) {
+            flabels[k] = fcomps.length;
+            stack.push(k);
+          }
+        }
+      }
+      fcomps.push({ color, px });
+    }
+  }
+  const fbig = fcomps.filter((c) => c.px.length >= 400 && c.color !== "black");
+  const centroid = (c) => {
+    let sx = 0;
+    let sy = 0;
+    for (const j of c.px) {
+      sx += j % fw;
+      sy += (j / fw) | 0;
+    }
+    return [sx / c.px.length, sy / c.px.length];
+  };
+  const isLeft = (c) => {
+    const [cx, cy] = centroid(c);
+    return cx < 0.45 * fw && cy < 0.6 * fh;
+  };
+  const isRight = (c) => {
+    const [cx, cy] = centroid(c);
+    return cx > 0.58 * fw && cy < 0.7 * fh;
+  };
+  const leftComps = fbig.filter(isLeft);
+  const rightComps = fbig.filter(isRight);
+  const bodyComps = fbig.filter((c) => !isLeft(c) && !isRight(c));
+  if (!leftComps.length || !rightComps.length) {
+    throw new Error("flight rig: wing detection failed");
+  }
+
+  let bcx = 0;
+  let bcy = 0;
+  let bn = 0;
+  for (const c of bodyComps) {
+    for (const j of c.px) {
+      bcx += j % fw;
+      bcy += (j / fw) | 0;
+      bn++;
+    }
+  }
+  bcx /= bn;
+  bcy /= bn;
+
+  const buildMask = (comps) => {
+    const m = new Uint8Array(fw * fh);
+    for (const c of comps) for (const j of c.px) m[j] = 1;
+    return m;
+  };
+  const dilate = (m, r) => {
+    const out = new Uint8Array(fw * fh);
+    for (let y = 0; y < fh; y++) {
+      for (let x = 0; x < fw; x++) {
+        if (!m[y * fw + x]) continue;
+        for (let dy = -r; dy <= r; dy++) {
+          for (let dx = -r; dx <= r; dx++) {
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx >= 0 && ny >= 0 && nx < fw && ny < fh) out[ny * fw + nx] = 1;
+          }
+        }
+      }
+    }
+    return out;
+  };
+  const traceRing = (m) => {
+    const vals = new Float32Array(fw * fh);
+    for (let i = 0; i < fw * fh; i++) vals[i] = m[i];
+    const [contour] = contours().size([fw, fh]).thresholds([0.5])(vals);
+    const rings = [];
+    for (const poly of contour.coordinates) {
+      for (const r of poly) {
+        const pts = r.slice(0, -1).map(([x, y]) => [x, y]);
+        const s = rdp(pts, 3);
+        if (s.length >= 3) rings.push(s);
+      }
+    }
+    rings.sort((a, b) => b.length - a.length);
+    return rings[0];
+  };
+  const nearest = (m, cx, cy) => {
+    let best = null;
+    let bd = Infinity;
+    for (let y = 0; y < fh; y++) {
+      for (let x = 0; x < fw; x++) {
+        if (!m[y * fw + x]) continue;
+        const d = (x - cx) ** 2 + (y - cy) ** 2;
+        if (d < bd) {
+          bd = d;
+          best = [x, y];
+        }
+      }
+    }
+    return best;
+  };
+  const ringToPath = (ring) =>
+    "M" +
+    ring
+      .map(([x, y]) => `${Math.round(x * 10) / 10} ${Math.round(y * 10) / 10}`)
+      .join(" L") +
+    " Z";
+
+  const leftMask = dilate(buildMask(leftComps), 6);
+  const rightMask = dilate(buildMask(rightComps), 6);
+  const leftPath = ringToPath(traceRing(leftMask));
+  const rightPath = ringToPath(traceRing(rightMask));
+  const pivotLeft = nearest(leftMask, bcx, bcy);
+  const pivotRight = nearest(rightMask, bcx, bcy);
+  const ROOT_R = 80;
+
+  writeFileSync(
+    "lib/eagle-flight.generated.ts",
+    `// AUTO-GENERATED from ${SRC_FLY} (body + wing split for the flap rig).\n` +
+      `// Regenerate with: node scripts/build-eagle-assets.mjs\n` +
+      `export const FLY_WIDTH = ${fw};\n` +
+      `export const FLY_HEIGHT = ${fh};\n\n` +
+      `export const FLY_LEFT_WING =\n  ${JSON.stringify(leftPath)};\n\n` +
+      `export const FLY_RIGHT_WING =\n  ${JSON.stringify(rightPath)};\n\n` +
+      `export const FLY_LEFT_PIVOT = [${pivotLeft[0]}, ${pivotLeft[1]}] as const;\n` +
+      `export const FLY_RIGHT_PIVOT = [${pivotRight[0]}, ${pivotRight[1]}] as const;\n` +
+      `export const FLY_ROOT_RADIUS = ${ROOT_R};\n`,
+  );
+  console.log(
+    `flight -> lib/eagle-flight.generated.ts (L@${pivotLeft} R@${pivotRight})`,
+  );
+
+  const b64 = readFileSync(SRC_FLY).toString("base64");
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${fw} ${fh}" width="${fw}" height="${fh}">`;
+  svg += `<image href="data:image/png;base64,${b64}" x="0" y="0" width="${fw}" height="${fh}"/>`;
+  svg += `<path d="${leftPath}" fill="#ff3b30" fill-opacity="0.3" stroke="#ff3b30" stroke-width="2"/>`;
+  svg += `<path d="${rightPath}" fill="#34c759" fill-opacity="0.3" stroke="#34c759" stroke-width="2"/>`;
+  svg += `<circle cx="${pivotLeft[0]}" cy="${pivotLeft[1]}" r="${ROOT_R}" fill="none" stroke="#ffd60a" stroke-width="3"/>`;
+  svg += `<circle cx="${pivotRight[0]}" cy="${pivotRight[1]}" r="${ROOT_R}" fill="none" stroke="#ffd60a" stroke-width="3"/>`;
+  svg += `<text x="${pivotLeft[0]}" y="${pivotLeft[1]}" font-family="Arial" font-size="26" font-weight="bold" fill="#fff" text-anchor="middle">L</text>`;
+  svg += `<text x="${pivotRight[0]}" y="${pivotRight[1]}" font-family="Arial" font-size="26" font-weight="bold" fill="#fff" text-anchor="middle">R</text>`;
+  svg += `</svg>`;
+  writeFileSync("public/debug-eagle-fly.svg", svg);
+  console.log("debug -> public/debug-eagle-fly.svg");
+}
 
 // --- 6. trace the silhouette into a clip path ------------------------------
 {

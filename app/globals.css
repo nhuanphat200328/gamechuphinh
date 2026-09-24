@@ -227,6 +227,146 @@ body {
   }
 }
 
+/* Flying eagle: golden glow pulsing in time with the wing beat. */
+.eagle-fly-rig {
+  animation: fly-glow 1.1s ease-in-out infinite;
+}
+
+@keyframes fly-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 16px rgba(255, 208, 110, 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 0 40px rgba(255, 208, 110, 0.85));
+  }
+}
+
+/* Take-off screen shake (runs once when the flight starts). */
+.screen-root.is-takeoff {
+  animation: takeoff-shake 0.9s ease-out 1;
+}
+
+@keyframes takeoff-shake {
+  0% {
+    transform: translate(0, 0);
+  }
+  10% {
+    transform: translate(-6px, 3px);
+  }
+  22% {
+    transform: translate(5px, -3px);
+  }
+  34% {
+    transform: translate(-4px, 2px);
+  }
+  46% {
+    transform: translate(3px, -2px);
+  }
+  58% {
+    transform: translate(-2px, 1px);
+  }
+  70%,
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+/* Completion particle overlay: feathers, dust and speed lines. */
+.fly-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.fly-fx .feather {
+  position: absolute;
+  top: 30%;
+  opacity: 0;
+  border-radius: 60% 60% 55% 55% / 85% 85% 35% 35%;
+  background: linear-gradient(160deg, #f6edda, #d3c29a 65%, #9c8b64);
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+  animation-name: feather-fall;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+
+@keyframes feather-fall {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(0deg);
+  }
+  12% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--drift, 0px), 95vh) rotate(var(--rot, 360deg));
+  }
+}
+
+.fly-fx .dust {
+  position: absolute;
+  bottom: 16%;
+  opacity: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 224, 160, 0.95),
+    rgba(255, 196, 110, 0) 70%
+  );
+  animation-name: dust-puff;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes dust-puff {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.4);
+  }
+  18% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, 42px) scale(1.9);
+  }
+}
+
+.fly-fx .speedline {
+  position: absolute;
+  top: -25%;
+  width: 2px;
+  border-radius: 2px;
+  opacity: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 240, 200, 0),
+    rgba(255, 240, 200, 0.85),
+    rgba(255, 240, 200, 0)
+  );
+  animation-name: speed-line;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+
+@keyframes speed-line {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scaleY(0.4);
+  }
+  25% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(140vh) scaleY(1.5);
+  }
+}
+
 /* ==========================================================================
    Screen shell
    ========================================================================== */
