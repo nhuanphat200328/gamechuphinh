@@ -63,24 +63,19 @@ export default function ScreenPage() {
 
   // --- Completion: play the video, then flash back to the game KV ---------
   const prevCompleteRef = useRef(false);
-  const endTimerRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     if (isComplete && !prevCompleteRef.current) {
       setPhase("flight");
     } else if (!isComplete && prevCompleteRef.current) {
-      window.clearTimeout(endTimerRef.current);
       setPhase("playing");
       setHighlight(null);
     }
     prevCompleteRef.current = isComplete;
   }, [isComplete]);
 
-  // Hold the last video frame for a beat, then start the return transition.
-  const handleVideoEnded = () => {
-    window.clearTimeout(endTimerRef.current);
-    endTimerRef.current = window.setTimeout(() => setPhase("returning"), 1500);
-  };
+  // The moment the video ends, start the flash + crossfade back to the KV.
+  const handleVideoEnded = () => setPhase("returning");
 
   // The flash + crossfade takes ~0.9s; afterwards the KV is shown for good.
   useEffect(() => {
@@ -88,8 +83,6 @@ export default function ScreenPage() {
     const timer = window.setTimeout(() => setPhase("done"), 900);
     return () => window.clearTimeout(timer);
   }, [phase]);
-
-  useEffect(() => () => window.clearTimeout(endTimerRef.current), []);
 
   return (
     <main
