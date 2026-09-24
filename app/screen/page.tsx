@@ -177,6 +177,10 @@ export default function ScreenPage() {
         />
       ) : null}
 
+      {/* Light golden flash at the instant the tenth piece lands, handing off
+          to the video. Plays once; fades out on its own. */}
+      {phase === "flight" ? <div className="intro-flash" aria-hidden /> : null}
+
       {phase === "returning" ? <div className="return-flash" aria-hidden /> : null}
     </main>
   );

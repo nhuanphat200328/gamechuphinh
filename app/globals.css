@@ -131,9 +131,48 @@ body {
   height: 100vh;
   object-fit: cover;
   background: #000;
+  animation: video-in 0.9s ease-out;
   transition:
     opacity 0.6s ease,
     transform 0.6s ease;
+}
+
+@keyframes video-in {
+  0% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Golden flash the moment the puzzle is completed (hand-off to the video). */
+.intro-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 52%,
+    #fffaf0 0%,
+    #ffe08a 26%,
+    rgba(255, 200, 90, 0) 68%
+  );
+  animation: intro-flash 0.9s ease-out forwards;
+}
+
+@keyframes intro-flash {
+  0% {
+    opacity: 0;
+  }
+  22% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .flight-video.is-out {
