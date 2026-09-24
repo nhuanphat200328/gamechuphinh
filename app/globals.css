@@ -102,19 +102,25 @@ body {
    Completion video
    ========================================================================== */
 
-/* Board + QR fade out while the video takes over the whole screen. */
-.screen-root.is-flight .eagle-puzzle {
-  opacity: 0;
-  transform: scale(0.96);
+/* Board + QR fade out while the video plays, and back in on the return. */
+.eagle-puzzle {
   transition:
     opacity 0.6s ease,
     transform 0.6s ease;
 }
 
+.screen-root.is-flight .eagle-puzzle {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+.screen-root aside {
+  transition: opacity 0.4s ease;
+}
+
 .screen-root.is-flight aside {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.4s ease;
 }
 
 .flight-video {
@@ -125,6 +131,41 @@ body {
   height: 100vh;
   object-fit: cover;
   background: #000;
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+
+.flight-video.is-out {
+  opacity: 0;
+  transform: scale(1.04);
+}
+
+/* Golden flash that masks the crossfade back to the game KV. */
+.return-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 45%,
+    #fff8e6 0%,
+    #ffd76b 30%,
+    rgba(255, 200, 90, 0) 70%
+  );
+  animation: return-flash 0.9s ease-out forwards;
+}
+
+@keyframes return-flash {
+  0% {
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 /* ==========================================================================

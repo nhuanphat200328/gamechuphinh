@@ -6,7 +6,7 @@ import { QrPanel } from "@/components/game/QrPanel";
 import { useGameState } from "@/hooks/useGameState";
 import { EAGLE_FLYING_VIDEO, resolveSiteUrl } from "@/lib/config";
 
-type Phase = "playing" | "flight";
+type Phase = "playing" | "flight" | "returning" | "done";
 
 export default function ScreenPage() {
   const { game, pieces, connected, loading, error } = useGameState();
@@ -61,18 +61,35 @@ export default function ScreenPage() {
     }
   }, [pieces]);
 
-  // --- Completion: play the flying-eagle video full screen ----------------
+  // --- Completion: play the video, then flash back to the game KV ---------
   const prevCompleteRef = useRef(false);
+  const endTimerRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     if (isComplete && !prevCompleteRef.current) {
       setPhase("flight");
     } else if (!isComplete && prevCompleteRef.current) {
+      window.clearTimeout(endTimerRef.current);
       setPhase("playing");
       setHighlight(null);
     }
     prevCompleteRef.current = isComplete;
   }, [isComplete]);
+
+  // Hold the last video frame for a beat, then start the return transition.
+  const handleVideoEnded = () => {
+    window.clearTimeout(endTimerRef.current);
+    endTimerRef.current = window.setTimeout(() => setPhase("returning"), 1500);
+  };
+
+  // The flash + crossfade takes ~0.9s; afterwards the KV is shown for good.
+  useEffect(() => {
+    if (phase !== "returning") return;
+    const timer = window.setTimeout(() => setPhase("done"), 900);
+    return () => window.clearTimeout(timer);
+  }, [phase]);
+
+  useEffect(() => () => window.clearTimeout(endTimerRef.current), []);
 
   return (
     <main
@@ -153,17 +170,21 @@ export default function ScreenPage() {
         </footer>
       </div>
 
-      {/* Completion video: full-screen, plays once and holds the last frame. */}
-      {phase === "flight" ? (
+      {/* Completion video: full-screen, plays once and holds the last frame.
+          After a short beat it flashes and crossfades back to the game KV. */}
+      {phase === "flight" || phase === "returning" ? (
         <video
-          className="flight-video"
+          className={`flight-video ${phase === "returning" ? "is-out" : ""}`}
           src={EAGLE_FLYING_VIDEO}
           autoPlay
           muted
           playsInline
           preload="auto"
+          onEnded={handleVideoEnded}
         />
       ) : null}
+
+      {phase === "returning" ? <div className="return-flash" aria-hidden /> : null}
     </main>
   );
 }
