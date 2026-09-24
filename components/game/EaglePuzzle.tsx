@@ -167,6 +167,30 @@ export function EaglePuzzle({
                 keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
               />
 
+              {/* The right wing sits BEHIND the body so the beak/head stays on
+                  top of it while the wing beats (never hides the beak). */}
+              <g className="eagle-fly-wing eagle-fly-wing--right">
+                <animateTransform
+                  attributeName="transform"
+                  type="rotate"
+                  values={`-16 ${rp[0]} ${rp[1]}; 12 ${rp[0]} ${rp[1]}; -16 ${rp[0]} ${rp[1]}`}
+                  dur="1.1s"
+                  repeatCount="indefinite"
+                  calcMode="spline"
+                  keyTimes="0;0.5;1"
+                  keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+                />
+                <g clipPath="url(#fly-wing-right)">
+                  <image
+                    href={EAGLE_FLYING_IMAGE}
+                    x={0}
+                    y={0}
+                    width={FLY_WIDTH}
+                    height={FLY_HEIGHT}
+                  />
+                </g>
+              </g>
+
               <image
                 className="eagle-fly-body"
                 href={EAGLE_FLYING_IMAGE}
@@ -189,28 +213,6 @@ export function EaglePuzzle({
                   keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
                 />
                 <g clipPath="url(#fly-wing-left)">
-                  <image
-                    href={EAGLE_FLYING_IMAGE}
-                    x={0}
-                    y={0}
-                    width={FLY_WIDTH}
-                    height={FLY_HEIGHT}
-                  />
-                </g>
-              </g>
-
-              <g className="eagle-fly-wing eagle-fly-wing--right">
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  values={`-16 ${rp[0]} ${rp[1]}; 12 ${rp[0]} ${rp[1]}; -16 ${rp[0]} ${rp[1]}`}
-                  dur="1.1s"
-                  repeatCount="indefinite"
-                  calcMode="spline"
-                  keyTimes="0;0.5;1"
-                  keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
-                />
-                <g clipPath="url(#fly-wing-right)">
                   <image
                     href={EAGLE_FLYING_IMAGE}
                     x={0}
