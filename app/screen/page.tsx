@@ -1,20 +1,13 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type AnimationEvent,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EaglePuzzle } from "@/components/game/EaglePuzzle";
-import { FlightEffects } from "@/components/game/FlightEffects";
+import { FlightStage } from "@/components/game/FlightStage";
 import { QrPanel } from "@/components/game/QrPanel";
 import { useGameState } from "@/hooks/useGameState";
 import { resolveSiteUrl } from "@/lib/config";
 
-type Phase = "playing" | "celebrate" | "flying" | "done";
+type Phase = "playing" | "flight" | "done";
 
 export default function ScreenPage() {
   const { game, pieces, connected, loading, error } = useGameState();
@@ -22,6 +15,8 @@ export default function ScreenPage() {
   const [origin, setOrigin] = useState("");
   const [phase, setPhase] = useState<Phase>("playing");
   const [highlight, setHighlight] = useState<number | null>(null);
+
+  const boardRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -69,12 +64,12 @@ export default function ScreenPage() {
     }
   }, [pieces]);
 
-  // --- Completion animation state machine --------------------------------
+  // --- Completion -> flight -> done ---------------------------------------
   const prevCompleteRef = useRef(false);
 
   useEffect(() => {
     if (isComplete && !prevCompleteRef.current) {
-      setPhase("celebrate");
+      setPhase("flight");
     } else if (!isComplete && prevCompleteRef.current) {
       setPhase("playing");
       setHighlight(null);
@@ -82,29 +77,15 @@ export default function ScreenPage() {
     prevCompleteRef.current = isComplete;
   }, [isComplete]);
 
-  /**
-   * Phase transitions are driven by the actual CSS animations (not timers), so
-   * they stay in sync even if the durations change:
-   *   eagle-celebrate (hold + glow)  -> flying
-   *   eagle-flight    (fly away)     -> done
-   */
-  const handleAnimationEnd = useCallback(
-    (event: AnimationEvent<HTMLDivElement>) => {
-      if (event.animationName === "eagle-celebrate") {
-        setPhase((current) => (current === "celebrate" ? "flying" : current));
-      } else if (event.animationName === "eagle-flight") {
-        setPhase((current) => (current === "flying" ? "done" : current));
-      }
-    },
-    [],
-  );
+  const handleFlightFinished = useCallback(() => {
+    setPhase((current) => (current === "flight" ? "done" : current));
+  }, []);
 
-  // The completion text only appears once the eagle has fully left the screen.
   const showCompletionText = phase === "done";
 
   return (
     <main
-      className={`screen-root text-[var(--ink)] ${phase === "flying" ? "is-takeoff" : ""}`}
+      className={`screen-root text-[var(--ink)] ${phase !== "playing" ? "is-flight" : ""}`}
     >
       <div className="screen-grid" />
 
@@ -134,7 +115,7 @@ export default function ScreenPage() {
         {/* Main stage */}
         <section className="mt-[clamp(0.5rem,1.5vh,1.5rem)] flex min-h-0 flex-1 items-center gap-[clamp(1rem,3vw,3rem)]">
           <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center self-stretch">
-            <div className="h-full w-full" onAnimationEnd={handleAnimationEnd}>
+            <div ref={boardRef} className="h-full w-full">
               {loading && !game ? (
                 <div className="flex h-full w-full items-center justify-center text-[var(--muted)]">
                   Đang tải...
@@ -144,14 +125,9 @@ export default function ScreenPage() {
                   pieces={pieces}
                   totalPieces={total}
                   highlighted={highlight}
-                  celebrating={phase === "celebrate"}
-                  flying={phase === "flying" || phase === "done"}
-                  showFlying={phase !== "playing"}
                 />
               )}
             </div>
-
-            <FlightEffects active={phase === "celebrate" || phase === "flying"} />
 
             {showCompletionText ? (
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
@@ -165,7 +141,7 @@ export default function ScreenPage() {
             ) : null}
           </div>
 
-          {/* QR side panel */}
+          {/* QR side panel (hidden while the eagle is flying) */}
           <aside className="flex w-[clamp(180px,20vw,360px)] shrink-0 flex-col items-center justify-center">
             {captureUrl ? (
               <QrPanel url={captureUrl} completed={completed} total={total} />
@@ -196,6 +172,12 @@ export default function ScreenPage() {
           ) : null}
         </footer>
       </div>
+
+      <FlightStage
+        active={phase === "flight"}
+        originRef={boardRef}
+        onFinished={handleFlightFinished}
+      />
     </main>
   );
 }
