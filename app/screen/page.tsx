@@ -1,13 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { EaglePuzzle } from "@/components/game/EaglePuzzle";
-import { FlightStage } from "@/components/game/FlightStage";
 import { QrPanel } from "@/components/game/QrPanel";
 import { useGameState } from "@/hooks/useGameState";
-import { resolveSiteUrl } from "@/lib/config";
+import { EAGLE_FLYING_VIDEO, resolveSiteUrl } from "@/lib/config";
 
-type Phase = "playing" | "flight" | "done";
+type Phase = "playing" | "flight";
 
 export default function ScreenPage() {
   const { game, pieces, connected, loading, error } = useGameState();
@@ -15,8 +14,6 @@ export default function ScreenPage() {
   const [origin, setOrigin] = useState("");
   const [phase, setPhase] = useState<Phase>("playing");
   const [highlight, setHighlight] = useState<number | null>(null);
-
-  const boardRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -64,7 +61,7 @@ export default function ScreenPage() {
     }
   }, [pieces]);
 
-  // --- Completion -> flight -> done ---------------------------------------
+  // --- Completion: play the flying-eagle video full screen ----------------
   const prevCompleteRef = useRef(false);
 
   useEffect(() => {
@@ -77,15 +74,9 @@ export default function ScreenPage() {
     prevCompleteRef.current = isComplete;
   }, [isComplete]);
 
-  const handleFlightFinished = useCallback(() => {
-    setPhase((current) => (current === "flight" ? "done" : current));
-  }, []);
-
-  const showCompletionText = phase === "done";
-
   return (
     <main
-      className={`screen-root text-[var(--ink)] ${phase !== "playing" ? "is-flight" : ""}`}
+      className={`screen-root text-[var(--ink)] ${phase === "flight" ? "is-flight" : ""}`}
     >
       <div className="screen-grid" />
 
@@ -115,7 +106,7 @@ export default function ScreenPage() {
         {/* Main stage */}
         <section className="mt-[clamp(0.5rem,1.5vh,1.5rem)] flex min-h-0 flex-1 items-center gap-[clamp(1rem,3vw,3rem)]">
           <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center self-stretch">
-            <div ref={boardRef} className="h-full w-full">
+            <div className="h-full w-full">
               {loading && !game ? (
                 <div className="flex h-full w-full items-center justify-center text-[var(--muted)]">
                   Đang tải...
@@ -128,20 +119,9 @@ export default function ScreenPage() {
                 />
               )}
             </div>
-
-            {showCompletionText ? (
-              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <p className="completion-title text-center text-[clamp(1.4rem,4vw,4.5rem)] leading-none font-black tracking-[0.08em] text-[var(--gold-2)] text-glow-gold">
-                  ĐẠI BÀNG ĐÃ TUNG CÁNH
-                </p>
-                <p className="completion-subtitle mt-4 text-[clamp(0.7rem,1.1vw,1.1rem)] tracking-[0.3em] text-[var(--muted)] uppercase">
-                  Hoàn thành · Mở /admin để bắt đầu lượt mới
-                </p>
-              </div>
-            ) : null}
           </div>
 
-          {/* QR side panel (hidden while the eagle is flying) */}
+          {/* QR side panel (hidden while the video plays) */}
           <aside className="flex w-[clamp(180px,20vw,360px)] shrink-0 flex-col items-center justify-center">
             {captureUrl ? (
               <QrPanel url={captureUrl} completed={completed} total={total} />
@@ -173,11 +153,17 @@ export default function ScreenPage() {
         </footer>
       </div>
 
-      <FlightStage
-        active={phase === "flight"}
-        originRef={boardRef}
-        onFinished={handleFlightFinished}
-      />
+      {/* Completion video: full-screen, plays once and holds the last frame. */}
+      {phase === "flight" ? (
+        <video
+          className="flight-video"
+          src={EAGLE_FLYING_VIDEO}
+          autoPlay
+          muted
+          playsInline
+          preload="auto"
+        />
+      ) : null}
     </main>
   );
 }

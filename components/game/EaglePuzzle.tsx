@@ -19,8 +19,8 @@ interface EaglePuzzleProps {
 
 /**
  * The in-play board: the real artwork with the audience photos clipped into
- * each piece. The flight sequence is handled by a separate full-screen layer
- * (`FlightStage`), so this component only renders the board itself.
+ * each piece. The completion video is handled by the screen page, so this
+ * component only renders the board itself.
  */
 export function EaglePuzzle({
   pieces,

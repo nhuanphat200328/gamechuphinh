@@ -20,7 +20,8 @@ export const DEFAULT_TOTAL_PIECES = Number(
 
 /** Real eagle artwork (in /public/pictures). */
 export const EAGLE_BASE_IMAGE = "/pictures/daibang.png";
-export const EAGLE_FLYING_IMAGE = "/pictures/daibangbay.png";
+/** Completion video: played full-screen once the tenth piece is filled. */
+export const EAGLE_FLYING_VIDEO = "/pictures/daibangbay.mp4";
 
 /** Demo image used for fresh pieces (relative to /public). */
 export const DEMO_IMAGE_URL = EAGLE_BASE_IMAGE;
