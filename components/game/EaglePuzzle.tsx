@@ -116,7 +116,7 @@ export function EaglePuzzle({
             y={0}
             width={BOARD_WIDTH}
             height={BOARD_HEIGHT}
-            preserveAspectRatio="none"
+            preserveAspectRatio="xMidYMid meet"
           />
         </g>
       </svg>

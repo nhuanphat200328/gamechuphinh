@@ -1,20 +1,30 @@
 /**
  * Eagle puzzle geometry.
  *
- * The puzzle uses the real artwork `/pictures/daibang.png` as its base image.
- * That photo is a 1536x1024 cutout of a perched eagle, so the board matches the
- * image aspect ratio exactly (no stretching, no cropping).
+ * The puzzle uses the artwork `/pictures/daibang.png` as its base image. That
+ * artwork is a low-poly eagle split into ten colour regions separated by black
+ * outlines (HEAD, BEAK, NECK, BLUE, DARK_BLUE, ORANGE, RED, GREEN, PURPLE,
+ * LEG). Each region becomes one puzzle piece; the board matches the image size
+ * exactly (no stretching, no cropping).
  *
- * The eagle is split into 10 pieces by a grid aligned to the eagle's main axis
- * (computed from the photo's alpha channel). Each piece is a quadrilateral in
- * board coordinates; at render time it is additionally masked by the eagle's
- * alpha silhouette, so a piece is always exactly a region of the eagle.
+ * The polygons are traced from the black outlines and their shared corners are
+ * snapped to a single coordinate, so neighbouring pieces share the exact same
+ * edge (edge-to-edge, no gaps/overlaps). At render time each piece is
+ * additionally masked by the eagle's alpha silhouette.
  *
  * The array order matches `puzzle_pieces.piece_index`.
+ *
+ * Regenerate the coordinates with `node scripts/build-eagle-assets.mjs`.
  */
 
-export const BOARD_WIDTH = 1536;
-export const BOARD_HEIGHT = 1024;
+import {
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  PIECE_NAMES,
+  PIECE_POLYGONS,
+} from "./eagle-pieces.generated";
+
+export { BOARD_HEIGHT, BOARD_WIDTH };
 
 export type Point = readonly [number, number];
 
@@ -28,25 +38,13 @@ export interface BoundingBox {
 export interface EaglePiece {
   /** 1-based index, matches `puzzle_pieces.piece_index`. */
   index: number;
+  /** Body-part name, e.g. "HEAD", "BEAK", ... */
+  name: string;
   /** SVG path (board coordinates) used as the piece clip region. */
   path: string;
   bbox: BoundingBox;
   center: Point;
 }
-
-// Quadrilateral piece regions (board coordinates).
-const PIECE_POLYGONS: string[] = [
-  "369,897 453,678 716,779 631,998",
-  "631,998 716,779 1086,920 1001,1140",
-  "453,678 509,532 772,633 716,779",
-  "716,779 772,633 1142,774 1086,920",
-  "509,532 602,288 865,389 772,633",
-  "772,633 865,389 1235,531 1142,774",
-  "602,288 674,101 937,202 865,389",
-  "865,389 937,202 1307,344 1235,531",
-  "674,101 747,-90 1010,11 937,202",
-  "937,202 1010,11 1380,153 1307,344",
-];
 
 function pointsToPath(points: string): string {
   const pairs = points.trim().split(/\s+/);
@@ -87,6 +85,7 @@ export const EAGLE_PIECES: EaglePiece[] = PIECE_POLYGONS.map((points, i) => {
   const bbox = pathBBox(path);
   return {
     index: i + 1,
+    name: PIECE_NAMES[i] ?? `PIECE_${i + 1}`,
     path,
     bbox,
     center: [bbox.x + bbox.width / 2, bbox.y + bbox.height / 2] as Point,
