@@ -4,9 +4,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { EaglePuzzle } from "@/components/game/EaglePuzzle";
 import { QrPanel } from "@/components/game/QrPanel";
 import { useGameState } from "@/hooks/useGameState";
-import { resolveSiteUrl } from "@/lib/config";
+import { EAGLE_FLYING_VIDEO, resolveSiteUrl } from "@/lib/config";
 
-type Phase = "playing" | "celebrate" | "flying" | "done";
+type Phase = "playing" | "flight" | "returning" | "done";
 
 export default function ScreenPage() {
   const { game, pieces, connected, loading, error } = useGameState();
@@ -61,12 +61,12 @@ export default function ScreenPage() {
     }
   }, [pieces]);
 
-  // --- Completion animation state machine --------------------------------
+  // --- Completion: play the video, then flash back to the game KV ---------
   const prevCompleteRef = useRef(false);
 
   useEffect(() => {
     if (isComplete && !prevCompleteRef.current) {
-      setPhase("celebrate");
+      setPhase("flight");
     } else if (!isComplete && prevCompleteRef.current) {
       setPhase("playing");
       setHighlight(null);
@@ -74,21 +74,20 @@ export default function ScreenPage() {
     prevCompleteRef.current = isComplete;
   }, [isComplete]);
 
+  // The moment the video ends, start the flash + crossfade back to the KV.
+  const handleVideoEnded = () => setPhase("returning");
+
+  // The flash + crossfade takes ~0.9s; afterwards the KV is shown for good.
   useEffect(() => {
-    if (phase === "celebrate") {
-      const timer = setTimeout(() => setPhase("flying"), 2600);
-      return () => clearTimeout(timer);
-    }
-    if (phase === "flying") {
-      const timer = setTimeout(() => setPhase("done"), 2600);
-      return () => clearTimeout(timer);
-    }
+    if (phase !== "returning") return;
+    const timer = window.setTimeout(() => setPhase("done"), 900);
+    return () => window.clearTimeout(timer);
   }, [phase]);
 
-  const showCompletionText = phase !== "playing";
-
   return (
-    <main className="screen-root text-[var(--ink)]">
+    <main
+      className={`screen-root text-[var(--ink)] ${phase === "flight" ? "is-flight" : ""}`}
+    >
       <div className="screen-grid" />
 
       <div className="relative z-10 flex h-full w-full flex-col px-[clamp(1rem,2.5vw,3rem)] py-[clamp(0.75rem,2vh,2rem)]">
@@ -116,7 +115,7 @@ export default function ScreenPage() {
 
         {/* Main stage */}
         <section className="mt-[clamp(0.5rem,1.5vh,1.5rem)] flex min-h-0 flex-1 items-center gap-[clamp(1rem,3vw,3rem)]">
-          <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center">
+          <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center self-stretch">
             <div className="h-full w-full">
               {loading && !game ? (
                 <div className="flex h-full w-full items-center justify-center text-[var(--muted)]">
@@ -127,31 +126,12 @@ export default function ScreenPage() {
                   pieces={pieces}
                   totalPieces={total}
                   highlighted={highlight}
-                  celebrating={phase === "celebrate"}
-                  flying={phase === "flying"}
                 />
               )}
             </div>
-
-            {showCompletionText ? (
-              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <p
-                  className={`text-center text-[clamp(1.4rem,4vw,4.5rem)] leading-none font-black tracking-[0.08em] text-[var(--gold-2)] text-glow-gold transition-opacity duration-700 ${
-                    phase === "flying" || phase === "done" ? "opacity-100" : "opacity-0"
-                  }`}
-                >
-                  ĐẠI BÀNG ĐÃ TUNG CÁNH
-                </p>
-                {phase === "done" ? (
-                  <p className="mt-4 text-[clamp(0.7rem,1.1vw,1.1rem)] tracking-[0.3em] text-[var(--muted)] uppercase">
-                    Hoàn thành · Mở /admin để bắt đầu lượt mới
-                  </p>
-                ) : null}
-              </div>
-            ) : null}
           </div>
 
-          {/* QR side panel */}
+          {/* QR side panel (hidden while the video plays) */}
           <aside className="flex w-[clamp(180px,20vw,360px)] shrink-0 flex-col items-center justify-center">
             {captureUrl ? (
               <QrPanel url={captureUrl} completed={completed} total={total} />
@@ -182,6 +162,22 @@ export default function ScreenPage() {
           ) : null}
         </footer>
       </div>
+
+      {/* Completion video: full-screen, plays once and holds the last frame.
+          After a short beat it flashes and crossfades back to the game KV. */}
+      {phase === "flight" || phase === "returning" ? (
+        <video
+          className={`flight-video ${phase === "returning" ? "is-out" : ""}`}
+          src={EAGLE_FLYING_VIDEO}
+          autoPlay
+          muted
+          playsInline
+          preload="auto"
+          onEnded={handleVideoEnded}
+        />
+      ) : null}
+
+      {phase === "returning" ? <div className="return-flash" aria-hidden /> : null}
     </main>
   );
 }

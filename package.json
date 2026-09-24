@@ -22,9 +22,11 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "d3-contour": "^4.0.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
     "pg": "^8.23.0",
+    "pngjs": "^7.0.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

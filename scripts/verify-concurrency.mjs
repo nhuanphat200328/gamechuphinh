@@ -46,7 +46,7 @@ const ATTEMPTS = 14;
 try {
   const created = await pool.query("select new_game($1, $2) as id", [
     TOTAL,
-    "/eagle.svg",
+    "/pictures/daibang.png",
   ]);
   const gameId = created.rows[0].id;
   console.log("Test game:", gameId);
